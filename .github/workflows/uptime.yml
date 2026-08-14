@@ -1,0 +1,19 @@
+name: Uptime Monitor
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sprawdzanie dostępności (Ping)
+        run: |
+          HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" https://mapabeskidu.pl)
+          echo "Status serwera: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "Serwer nie odpowiada prawidłowo (kod błędu: $HTTP_STATUS)."
+            exit 1
+          fi

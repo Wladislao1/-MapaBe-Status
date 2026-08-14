@@ -1,0 +1,20 @@
+name: Lighthouse CI (Wydajność)
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # Codziennie o 3:00 w nocy
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Uruchamianie Lighthouse na mapabeskidu.pl
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: |
+            https://mapabeskidu.pl
+          budgetPath: ''
+          uploadArtifacts: true
+          temporaryPublicStorage: true
