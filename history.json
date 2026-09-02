@@ -1,0 +1,38 @@
+{
+  "lastUpdate": "2026-09-02T13:23:36.103Z",
+  "endpoints": {
+    "frontend": {
+      "name": "Mapa Beskidu (Frontend)",
+      "logs": [
+        {
+          "timestamp": "2026-09-02T13:23:36.103Z",
+          "status": 200,
+          "time": 4334,
+          "success": true
+        }
+      ]
+    },
+    "backend": {
+      "name": "API PHP (Backend)",
+      "logs": [
+        {
+          "timestamp": "2026-09-02T13:23:36.103Z",
+          "status": 200,
+          "time": 162,
+          "success": true
+        }
+      ]
+    },
+    "imgw": {
+      "name": "API IMGW (Alerty)",
+      "logs": [
+        {
+          "timestamp": "2026-09-02T13:23:36.103Z",
+          "status": 404,
+          "time": 146,
+          "success": false
+        }
+      ]
+    }
+  }
+}

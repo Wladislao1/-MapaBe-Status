@@ -1,19 +1,36 @@
-name: Uptime Monitor
+name: Status Monitor
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '*/15 * * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  ping:
+  monitor:
     runs-on: ubuntu-latest
     steps:
-      - name: Sprawdzanie dostępności (Ping)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          
+      - name: Run Monitor Script
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: node .github/scripts/monitor.js
+        
+      - name: Commit & Push history.json
+        if: always()
         run: |
-          HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" https://mapabeskidu.pl)
-          echo "Status serwera: $HTTP_STATUS"
-          if [ "$HTTP_STATUS" -ne 200 ]; then
-            echo "Serwer nie odpowiada prawidłowo (kod błędu: $HTTP_STATUS)."
-            exit 1
-          fi
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add history.json
+          # Commit only if there are changes
+          git diff --quiet && git diff --staged --quiet || git commit -m "chore: update status history [skip ci]"
+          git push

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Beskidu - Status Systemów</title>
+    
+    <!-- SEO & AI Optimization -->
+    <meta name="description" content="Oficjalna strona statusowa dla Mapa Beskidu. Sprawdź dostępność usług, API oraz powiadomień hydrologicznych w czasie rzeczywistym.">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Mapa Beskidu Status",
+      "url": "https://mapabeskidu.pl",
+      "description": "Status page and uptime monitor for Mapa Beskidu, an interactive tourism portal.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Mapa Beskidu"
+      }
+    }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+    
+    <!-- Navbar -->
+    <header class="bg-white border-b border-slate-200">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">M</div>
+                <h1 class="text-xl font-semibold">Mapa Beskidu <span class="text-slate-400 font-light">Status</span></h1>
+            </div>
+            <a href="https://mapabeskidu.pl" class="text-sm text-blue-600 hover:underline">Wróć do mapy</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 py-8 w-full flex-grow">
+        
+        <!-- Overall Status Banner -->
+        <div id="overall-status" class="rounded-xl p-6 mb-8 flex items-center gap-4 bg-slate-200 animate-pulse">
+            <div class="w-10 h-10 rounded-full bg-slate-300"></div>
+            <div>
+                <h2 class="text-2xl font-bold">Ładowanie statusu...</h2>
+                <p class="text-sm opacity-80">Pobieranie ostatnich danych</p>
+            </div>
+        </div>
+
+        <!-- Endpoints List -->
+        <h3 class="text-lg font-semibold mb-4 text-slate-700">Dostępność usług (ostatnie testy)</h3>
+        <div id="endpoints-container" class="space-y-4">
+            <!-- Dynamic content -->
+        </div>
+
+        <!-- Context & SEO Info -->
+        <div class="mt-12 bg-white rounded-xl p-6 border border-slate-200 shadow-sm text-sm text-slate-600">
+            <h4 class="font-bold mb-2">O systemie</h4>
+            <p>
+                To jest oficjalna strona monitorująca działanie usług portalu <strong><a href="https://mapabeskidu.pl" class="text-blue-600 hover:underline">Mapa Beskidu</a></strong>.
+                Monitorujemy dostępność głównej aplikacji webowej (Frontend), serwerów API (PHP Backend) odpowiedzialnych za punkty POI i logowanie, a także integracji zewnętrznych (IMGW), które dostarczają ostrzeżenia meteorologiczne dla Beskidów.
+            </p>
+            <p class="mt-2 text-xs text-slate-400">System automatycznie diagnozuje błędy i powiadamia redakcję o usterkach w czasie rzeczywistym. Hosted on GitHub Pages.</p>
+        </div>
+    </main>
+
+    <script>
+        async function loadStatus() {
+            try {
+                // Dodajemy losowy parametr by ominąć cache GH Pages
+                const res = await fetch('./history.json?t=' + new Date().getTime());
+                if (!res.ok) throw new Error("Nie można pobrać historii");
+                const data = await res.json();
+                
+                renderStatus(data);
+            } catch (err) {
+                console.error(err);
+                document.getElementById('overall-status').className = 'rounded-xl p-6 mb-8 flex items-center gap-4 bg-slate-200 text-slate-600';
+                document.getElementById('overall-status').innerHTML = `
+                    <div class="text-4xl">⚠️</div>
+                    <div>
+                        <h2 class="text-2xl font-bold">Brak danych</h2>
+                        <p class="text-sm opacity-80">Historia monitoringu nie jest jeszcze dostępna.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderStatus(data) {
+            let overallOk = true;
+            let container = document.getElementById('endpoints-container');
+            container.innerHTML = '';
+
+            Object.values(data.endpoints).forEach(ep => {
+                const logs = ep.logs || [];
+                const lastLog = logs.length > 0 ? logs[logs.length - 1] : null;
+                const isUp = lastLog && lastLog.success;
+                
+                if (!isUp) overallOk = false;
+
+                // Create endpoint card
+                const el = document.createElement('div');
+                el.className = 'bg-white rounded-xl p-4 border border-slate-200 shadow-sm';
+                
+                // Header
+                const header = document.createElement('div');
+                header.className = 'flex justify-between items-center mb-3';
+                header.innerHTML = `
+                    <span class="font-medium text-slate-800">${ep.name}</span>
+                    <span class="text-xs font-bold px-2 py-1 rounded-full ${isUp ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                        ${isUp ? 'Działające' : 'Awaria'}
+                    </span>
+                `;
+                el.appendChild(header);
+
+                // Uptime bars
+                const barsContainer = document.createElement('div');
+                barsContainer.className = 'flex gap-[2px] h-8 items-end';
+                
+                // Pokazujemy ostatnie 40 logów
+                const displayLogs = logs.slice(-40);
+                // Wypełniamy puste miejsca szarym, jeśli jest za mało historii
+                const emptySlots = Math.max(0, 40 - displayLogs.length);
+                
+                for(let i=0; i<emptySlots; i++) {
+                    barsContainer.innerHTML += `<div class="flex-1 bg-slate-100 rounded-sm h-full" title="Brak danych"></div>`;
+                }
+
+                displayLogs.forEach(log => {
+                    const color = log.success ? 'bg-green-400' : (log.status >= 500 ? 'bg-red-500' : 'bg-yellow-400');
+                    barsContainer.innerHTML += `<div class="flex-1 ${color} rounded-sm h-full hover:opacity-75 transition-opacity" title="${new Date(log.timestamp).toLocaleString()} - Kod: ${log.status}"></div>`;
+                });
+
+                el.appendChild(barsContainer);
+                
+                // Footer text
+                if (lastLog) {
+                    const timeAgo = Math.floor((new Date() - new Date(lastLog.timestamp)) / 60000);
+                    const footer = document.createElement('div');
+                    footer.className = 'mt-2 text-xs text-slate-400 text-right';
+                    footer.innerText = `Ostatni test: ${timeAgo} min temu (${lastLog.time}ms)`;
+                    el.appendChild(footer);
+                }
+
+                container.appendChild(el);
+            });
+
+            // Update banner
+            const banner = document.getElementById('overall-status');
+            if (overallOk) {
+                banner.className = 'rounded-xl p-6 mb-8 flex items-center gap-4 bg-green-500 text-white shadow-lg shadow-green-500/20';
+                banner.innerHTML = `
+                    <div class="text-4xl">✅</div>
+                    <div>
+                        <h2 class="text-2xl font-bold">Wszystkie systemy działają</h2>
+                        <p class="text-sm opacity-90">Nie odnotowano awarii w ostatnim czasie.</p>
+                    </div>
+                `;
+            } else {
+                banner.className = 'rounded-xl p-6 mb-8 flex items-center gap-4 bg-red-500 text-white shadow-lg shadow-red-500/20';
+                banner.innerHTML = `
+                    <div class="text-4xl">🚨</div>
+                    <div>
+                        <h2 class="text-2xl font-bold">Wykryto awarię</h2>
+                        <p class="text-sm opacity-90">Niektóre komponenty systemu napotkały problemy.</p>
+                    </div>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadStatus);
+    </script>
+</body>
+</html>
