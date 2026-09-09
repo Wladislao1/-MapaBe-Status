@@ -4,7 +4,7 @@ const http = require('http');
 
 const ENDPOINTS = [
   { id: 'frontend', name: 'Mapa Beskidu (Frontend)', url: 'https://mapabeskidu.pl', critical: true },
-  { id: 'backend', name: 'API PHP (Backend)', url: 'https://mapabeskidu.pl/api/get-alerts.php', critical: true },
+  { id: 'backend', name: 'API PHP (Backend)', url: 'https://mapabeskidu.pl/api/get-alerts.php', critical: false },
   { id: 'imgw', name: 'API IMGW (Alerty)', url: 'https://meteo.imgw.pl/api/meteo/messages/2/osmet/latest/json', critical: false }
 ];
 
